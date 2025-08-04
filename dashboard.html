@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+
+    <!-- google font cdn -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+
+    <!-- flaticon cdn -->
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+    <!-- tailwind css cdn -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- alpine js cdn -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+</head>
+
+<body>
+
+    <div x-data="{
+        loggedin       : $persist(false),
+        users          : $persist([]),
+        foundUser      : $persist({}),
+        depositAmount  : '',
+        withdrawAmount : '',
+        error          : '',
+        success        : '',
+        init() {
+            if (this.loggedin === false || Object.keys(this.foundUser).length === 0) {
+                window.location.href = './error.html';
+            }
+        },
+        deposit(){ 
+            if( this.depositAmount === '' ){
+                this.error = 'Please enter a deposit amount';
+                this.depositAmount = '';
+                return;
+            }
+            if( 0 >= parseFloat(this.depositAmount) ){
+                this.error = 'Please enter valid amount';
+                return;
+            }
+            this.foundUser.balance = this.foundUser.balance + parseFloat(this.depositAmount);
+
+            this.foundUser.transactions.push({
+                id           : Date.now(),
+                date         : new Date().toLocaleDateString(),
+                type         : 'Deposit',
+                amount       : this.depositAmount,
+                balanceAfter : this.foundUser.balance
+            })
+            this.users = this.users.map( user => user.firstname === this.foundUser.firstname ? this.foundUser : user );
+
+            this.success = 'Deposit successful';
+            this.error = '';
+            this.depositAmount = '';
+        },
+        withdraw(){ 
+            if( this.withdrawAmount === '' ){
+                this.error = 'Please enter a withdraw amount';
+                this.withdrawAmount = '';
+                return;
+            }
+            if( 0 >= parseFloat(this.withdrawAmount) ){
+                this.error = 'Please enter valid amount';
+                return;
+            }
+            if( parseFloat(this.withdrawAmount) > this.foundUser.balance ){
+                this.error = 'Insufficient balance';
+                return;
+            }
+            this.foundUser.balance = this.foundUser.balance - parseFloat(this.withdrawAmount);
+
+            this.foundUser.transactions.push({
+                id           : Date.now(),
+                date         : new Date().toLocaleDateString(),
+                type         : 'withdraw',
+                amount       : this.withdrawAmount,
+                balanceAfter : this.foundUser.balance
+            })
+            this.users = this.users.map( user => user.firstname === this.foundUser.firstname ? this.foundUser : user );
+
+            this.success = 'Withdraw successful';
+            this.error = '';
+            this.withdrawAmount = '';
+        },
+
+        logout(){
+            this.foundUser = null;
+            window.location.href = './index.html'
+            this.loggedin = false;
+        }
+
+    }" x-init="init()" x-cloak>
+        <div class="bg-[#2d2a38] flex items-center justify-center min-h-screen font-sans">
+            <div class="w-full max-w-6xl mx-auto space-y-6 text-white">
+                <!-- Header -->
+                <header
+                    class="flex flex-col sm:flex-row justify-between items-center bg-[#1E1C24] p-4 rounded-xl shadow-lg">
+                    <h1 class="text-2xl font-normal text-white mb-2 sm:mb-0">AMU Bank</h1>
+                    <button class="bg-[#433f4d] hover:bg-[#524e5c] text-white px-4 py-2 rounded-lg transition"
+                        @click="logout">Logout</button>
+                </header>
+
+                <!-- User Info and Actions -->
+                <section class="grid md:grid-cols-2 gap-6">
+
+                    <!-- User Details -->
+                    <div class="bg-[#1E1C24] p-6 rounded-xl shadow-lg space-y-2">
+                        <h2 class="text-xl font-semibold mb-4">Account Info</h2>
+
+                        <p class="capitalize">
+                            <span class="text-gray-400">Name: &nbsp</span>
+                            <span class="text-white font-semibold" x-text="foundUser.firstname"></span>&nbsp
+                            <span class="text-white font-semibold" x-text="foundUser.lastname"></span>
+                        </p>
+                        <p>
+                            <span class="text-gray-400">Account No: &nbsp</span>
+                            <span class="text-white font-semibold" x-text="foundUser.accountnumber"></span>
+                        </p>
+                        <p>
+                            <span class="text-gray-400">Balance: &nbsp</span>
+                            <span class="text-white font-semibold"
+                                x-text="foundUser?.balance?`₹ ${foundUser.balance}`:'0.00'"></span>
+                        </p>
+                        <p>
+                            <span class="text-gray-400">Email: &nbsp</span>
+                            <span class="text-white font-semibold" x-text="foundUser.email"></span>
+                        </p>
+
+                    </div>
+
+                    <!-- Deposit / Withdraw -->
+                    <div class="bg-[#1E1C24] p-6 rounded-xl shadow-lg space-y-4">
+                        <h2 class="text-xl font-semibold mb-2 relative">Transaction Actions
+                            <span class="text-sm font-normal absolute right-4 top-[50%] translate-y-[-50%]"
+                                :class="error ? 'text-red-400' : 'text-green-400'" x-show="error || success"
+                                x-text="error || success"></span>
+                            <!-- <span class="text-sm font-normal text-green-400 absolute right-0 top-[50%] translate-y-[-50%]" x-show="success" x-text="success"></span> -->
+                        </h2>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm text-gray-300">Deposit Amount</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" min="1" placeholder="₹ Amount"
+                                    class="w-full px-4 py-2 rounded-lg bg-[#2c2a34] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
+                                    x-model="depositAmount">
+                                <button
+                                    class="bg-green-700 hover:bg-green-600 transition px-[22px] py-2 rounded-lg text-sm font-semibold"
+                                    @click="deposit">
+                                    Deposit
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm text-gray-300">Withdraw Amount</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" min="1" placeholder="₹ Amount"
+                                    class="w-full px-4 py-2 rounded-lg bg-[#2c2a34] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                    x-model="withdrawAmount">
+                                <button
+                                    class="bg-red-700 hover:bg-red-600 transition px-[16px] py-2 rounded-lg text-sm font-semibold"
+                                    @click="withdraw">
+                                    Withdraw
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transaction History -->
+                <section class="bg-[#1E1C24] p-6 rounded-xl shadow-lg overflow-x-auto">
+                    <h2 class="text-xl font-semibold mb-4">Transaction History</h2>
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="text-gray-400 border-b border-gray-600">
+                            <tr>
+                                <th class="py-2 px-2">Date</th>
+                                <th class="py-2 px-2">Type</th>
+                                <th class="py-2 px-2">Amount</th>
+                                <th class="py-2 px-2">Balance After</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-white">
+                            <template x-for="transaction in foundUser.transactions.slice().reverse()"
+                                :key="transaction.id">
+                                <tr class="border-b border-gray-700">
+                                    <td class="py-2 px-2" x-text="transaction.date"></td>
+                                    <td class="py-2 px-2 text-green-400"
+                                        :class="{'text-red-400': transaction.type === 'withdraw'}"
+                                        x-text="transaction.type"></td>
+                                    <td class="py-2 px-2" x-text="`₹${transaction.amount}`"></td>
+                                    <td class="py-2 px-2" x-text="`₹${transaction.balanceAfter}`"></td>
+                                </tr>
+                            </template>
+                            <tr>
+                                <td colspan="4" class="py-2 px-2 text-center" x-show="!foundUser.transactions.length">No
+                                    transactions found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

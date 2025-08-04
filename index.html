@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System</title>
+
+    <!-- google font cdn -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+
+    <!-- flaticon cdn -->
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+    <!-- tailwind css cdn -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- alpine js cdn -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- custom js -->
+    <script src="./main.js" defer></script>
+
+</head>
+
+<body>
+
+    <div x-data="{
+        loggedin    : $persist(false),
+        firstname   : '',
+        lastname    : '',
+        email       : '',
+        password    : '',
+        success     : '',
+        error       : '',
+        users       : $persist([]),
+        foundUser   : $persist({}),
+        register    (){
+
+            if(this.firstname === '' || this.lastname === '' || this.email === '' || this.password === ''){
+                this.error = 'Please fill the form';
+                return;
+            }
+            if( this.password.length > 6 ){
+                this.error = 'Password length must be 6 character';
+                return;
+            }
+
+            for ( let user of this.users ){
+                if( user.firstname === this.firstname ){
+                    this.error = 'Name has already been taken';
+                    return;
+                }
+                if( user.email === this.email ){
+                    this.error = 'Email has already been taken';
+                    return;
+                }
+                if( user.password === this.password ){
+                    this.error = 'Password has already been taken';
+                    return;
+                }
+            }
+
+            this.users.push(
+                {
+                    firstname     : this.firstname,
+                    lastname      : this.lastname,
+                    email         : this.email,
+                    password      : this.password,
+                    accountnumber : '12345',
+                    balance       : 0,
+                    transactions  : []
+                }
+            )
+            
+            
+            this.success   = 'Account has been created';
+            this.loggedin  = true;
+            this.firstname = this.lastname = this.email = this.password = this.error = '';
+              
+
+        },
+        
+        login(){
+
+            if(this.firstname === '' || this.lastname === '' || this.password === ''){
+                this.error = 'Please enter valid details';
+                return;
+            }
+
+            let user = this.users.find(  user =>  user.firstname === this.firstname   &&   user.firstname === this.firstname   &&   user.password === this.password  )
+            if( user ){
+                this.foundUser = user;
+                window.location.href = './dashboard.html'
+                this.loggedin = true;
+            }else{
+                this.error = 'User not found!';
+            }
+
+        }
+        }">
+
+        <div class="bg-[#2d2a38] flex items-center justify-center min-h-screen font-sans">
+
+            <div class="w-full max-w-4xl bg-[#1f1d2b] rounded-2xl shadow-lg block md:flex items-center overflow-hidden">
+
+                <!-- Left Image/Intro Section -->
+                <div class="w-full md:w-1/2 p-5 transition-transform delay-400 duration-600 ease-in-out z-[1]"
+                    :class="loggedin ? 'translate-x-[100%]' : 'translate-x-[0]'">
+                    <div class="relative bg-cover bg-center md:block h-[350px] md:h-[500px] rounded-xl overflow-hidden"
+                        style="background-image: url('./images/dissert-login.png');">
+                        <div class="absolute top-4 left-4">
+                            <h1 class="text-white font-normal text-2xl tracking-[2px]"
+                                style="font-family: 'Orbitron', sans-serif;">AMU</h1>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <!-- <button class="text-sm text-white bg-white/10 hover:bg-white/20 px-4 py-1 rounded-full backdrop-blur">Back to website →</button> -->
+                        </div>
+                        <div class="absolute bottom-8 text-white left-0 right-0">
+                            <h2 class="text-2xl text-center font-light">Capturing Moments, <br>Creating Memories</h2>
+                            <div class="flex justify-center mt-5 space-x-1">
+                                <span class="w-8 rounded-full h-[3px]  bg-white/50"></span>
+                                <span class="w-8 rounded-full h-[3px]  bg-white/50"></span>
+                                <span class="w-8 rounded-full h-[3px]  bg-white"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Form Section -->
+                <div class="w-full md:w-1/2 p-10 md:ps-6 transition-transform duration-600 ease-in-out"
+                    :class="loggedin ? 'translate-x-[-100%]' : 'translate-x-[0]' ">
+                    <h2 class="text-white text-3xl font-semibold mb-6">Create an account</h2>
+                    <p class="text-sm text-gray-400 mb-6">Already have an account? <a href="#" @click="loggedin = !loggedin"
+                            class="text-blue-400 hover:underline">Log in</a></p>
+
+                    <form class="relative space-y-4">
+                        <div class="flex space-x-4">
+                            <input type="text" placeholder="First name" x-model="firstname"
+                                class="w-1/2 px-4 py-2 rounded-lg bg-[#2d2a38] text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <input type="text" placeholder="Last name" x-model="lastname"
+                                class="w-1/2 px-4 py-2 rounded-lg bg-[#2d2a38] text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <input type="email" placeholder="Email" x-model="email"
+                            class="w-full px-4 py-2 rounded-lg bg-[#2d2a38] text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            :class="loggedin ? 'opacity-[0] delay-500' : 'opacity-[1] delay-500'">
+                        <div class="relative" x-data="{show: false}">
+                            <input :type="show ? 'text' : 'password' " placeholder="Enter your password" x-model="password"
+                                class="w-full px-4 py-2 rounded-lg bg-[#2d2a38] text-white focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10">
+                            <span class="absolute right-3 top-2.5 text-gray-400 cursor-pointer"><i
+                                    :class="show ? 'fi fi-rr-eye' : 'fi fi-rr-eye-crossed'" @click="show = !show"></i>
+                            </span>
+                            
+                        </div>
+                        <div class="relative">
+                            <input type="text" placeholder="Enter your accountnumber"
+                                class="w-full px-4 py-2 rounded-lg bg-[#2d2a38] text-white focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
+                                :class="loggedin ? 'opacity-[1] delay-500' : 'opacity-[0] delay-500'">
+                            <!-- <span class="absolute right-3 top-2.5 text-gray-400 cursor-pointer"><i class="fi fi-rr-eye"></i> -->
+                            </span>
+                            <!-- <i class="fi fi-rs-crossed-eye"></i> -->
+                        </div>
+
+                        <div class="flex items-center text-sm text-white">
+                            <input type="checkbox" class="mr-2 rounded-full">
+                            I agree to the <a href="#" class="text-blue-400 hover:underline ml-1">Terms & Conditions</a>
+                        </div>
+                        <button type="button" role="button"
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition cursor-pointer"
+                            @click="loggedin ? login : register" x-text="loggedin ? 'Login' : 'Create account'"></button>
+                        <p class="text-center absolute left-[50%] translate-x-[-50%]" :class="{'text-red-500': error, 'text-lime-500': success}"
+                            x-show="error || success" x-text="error ? error : success"></p>
+                    </form>
+
+                </div>  
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
+
+</body>
+
+</html>
